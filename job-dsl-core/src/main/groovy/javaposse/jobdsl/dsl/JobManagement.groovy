@@ -1,5 +1,6 @@
 package javaposse.jobdsl.dsl
 
+import javaposse.jobdsl.dsl.helpers.ExtensibleContext
 /**
  * Interface to manage jobs, which the DSL needs to do.
  *
@@ -75,4 +76,6 @@ interface JobManagement {
      * the given version.
      */
     void requireMinimumPluginVersion(String pluginShortName, String version)
+
+    Node callExtension(String name, Class<? extends ExtensibleContext> contextType, Object... args)
 }

@@ -1,5 +1,6 @@
 package javaposse.jobdsl.dsl
 
+import javaposse.jobdsl.dsl.helpers.PropertiesContext
 import spock.lang.Specification
 
 import static org.codehaus.groovy.runtime.InvokerHelper.createScript
@@ -36,7 +37,22 @@ class AbstractJobManagementSpec extends Specification {
         buffer.toString().trim() == 'Warning: testMethod is deprecated (deprecation.groovy, line 1)'
     }
 
+    def 'callExtension'() {
+        setup:
+        AbstractJobManagement jobManagement = new TestJobManagement()
+
+        when:
+        Node node = jobManagement.callExtension('foo', PropertiesContext.class)
+
+        then:
+        node == null
+    }
+
     static class TestJobManagement extends AbstractJobManagement {
+        protected TestJobManagement() {
+            super()
+        }
+
         protected TestJobManagement(PrintStream out) {
             super(out)
         }
