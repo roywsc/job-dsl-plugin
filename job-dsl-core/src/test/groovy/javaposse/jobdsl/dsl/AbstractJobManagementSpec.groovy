@@ -42,7 +42,7 @@ class AbstractJobManagementSpec extends Specification {
         AbstractJobManagement jobManagement = new TestJobManagement()
 
         when:
-        Node node = jobManagement.callExtension('foo', PropertiesContext.class)
+        Node node = jobManagement.callExtension('foo', PropertiesContext)
 
         then:
         node == null

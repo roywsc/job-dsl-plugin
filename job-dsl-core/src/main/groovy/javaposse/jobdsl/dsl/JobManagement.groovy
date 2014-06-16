@@ -1,6 +1,7 @@
 package javaposse.jobdsl.dsl
 
 import javaposse.jobdsl.dsl.helpers.ExtensibleContext
+
 /**
  * Interface to manage jobs, which the DSL needs to do.
  *
