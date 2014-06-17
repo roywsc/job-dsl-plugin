@@ -1,16 +1,20 @@
 package javaposse.jobdsl.plugin
 
+import com.google.common.io.Resources
 import hudson.EnvVars
 import hudson.model.AbstractBuild
 import hudson.model.Failure
 import javaposse.jobdsl.dsl.ConfigurationMissingException
 import javaposse.jobdsl.dsl.NameNotProvidedException
 import javaposse.jobdsl.dsl.helpers.PropertiesContext
+import javaposse.jobdsl.plugin.api.ContextExtensionPoint
 import org.custommonkey.xmlunit.XMLUnit
 import org.junit.Rule
 import org.jvnet.hudson.test.JenkinsRule
 import spock.lang.Specification
 
+import static com.google.common.base.Charsets.UTF_8
+import static com.google.common.io.Resources.getResource
 import static hudson.model.Result.UNSTABLE
 
 class JenkinsJobManagementSpec extends Specification {
@@ -108,7 +112,7 @@ class JenkinsJobManagementSpec extends Specification {
         Node result = jobManagement.callExtension('test', PropertiesContext)
 
         then:
-        isXmlIdentical('/extension.xml', result)
+        isXmlIdentical('extension.xml', result)
     }
 
     def 'callExtension defined twice'() {
@@ -126,7 +130,7 @@ class JenkinsJobManagementSpec extends Specification {
         Node result = jobManagement.callExtension('testComplexObject', PropertiesContext, 'foo', 42, true)
 
         then:
-        isXmlIdentical('/extension.xml', result)
+        isXmlIdentical('extension.xml', result)
     }
 
     def 'callExtension with closure'() {
@@ -141,21 +145,35 @@ class JenkinsJobManagementSpec extends Specification {
         Node result = jobManagement.callExtension('withNestedContext', PropertiesContext, closure)
 
         then:
-        isXmlIdentical('/extension.xml', result)
+        isXmlIdentical('extension.xml', result)
+    }
+
+    def 'extension is being notified'() {
+        when:
+        jobManagement.createOrUpdateConfig('test-123', loadResource('config.xml'), true)
+
+        then:
+        ContextExtensionPoint.all().get(TestContextExtensionPoint).isItemCreated('test-123')
+
+        when:
+        jobManagement.createOrUpdateConfig('test-123', loadResource('config2.xml'), false)
+
+        then:
+        ContextExtensionPoint.all().get(TestContextExtensionPoint).isItemUpdated('test-123')
     }
 
     private static boolean isXmlIdentical(String expected, Node actual) throws Exception {
         XMLUnit.ignoreWhitespace = true
-
-        Reader expectedXml = new InputStreamReader(getClass().getResourceAsStream(expected))
-        String actualXml = nodeToString(actual)
-
-        XMLUnit.compareXML(expectedXml, actualXml).identical()
+        XMLUnit.compareXML(loadResource(expected), nodeToString(actual)).identical()
     }
 
     private static String nodeToString(Node node) {
         StringWriter writer = new StringWriter()
         new XmlNodePrinter(new PrintWriter(writer)).print(node)
         writer.toString()
+    }
+
+    private static String loadResource(String resourceName) {
+        Resources.toString(getResource(resourceName), UTF_8)
     }
 }
